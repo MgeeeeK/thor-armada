@@ -1,0 +1,13 @@
+[Unit]
+Description=Thor fixed 80%% battery charge limit
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/armada/thor-charge-limit
+ExecStopPost=/bin/sh -c 'm=$$(cat /sys/class/power_supply/battery/charge_control_limit_max 2>/dev/null || echo 9000000); echo $$m > /sys/class/power_supply/battery/charge_control_limit 2>/dev/null; true'
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
