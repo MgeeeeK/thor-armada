@@ -1,0 +1,29 @@
+#!/bin/bash
+# thor-charge-limit: fixed 80% battery ceiling on the AYN Thor. No configuration.
+#  boot : write 80 to charge_control_end_threshold (AYN firmware capacity-limit flag, property 16)
+#  loop : on charger and capacity>=80 -> clamp charge current (charge_control_limit=1000 uA)
+#         capacity<=77 or charger off -> release (write charge_control_limit_max)
+#  start: release unless on charger and >=80.  stop: release (also ExecStopPost).
+set -u
+B=/sys/class/power_supply/battery; U=/sys/class/power_supply/qcom-battmgr-usb
+THR=$B/charge_control_end_threshold; LIM=$B/charge_control_limit; MAX=$B/charge_control_limit_max
+log(){ echo "thor-charge-limit: $*"; }
+for i in $(seq 1 60); do [ -e "$LIM" ] && [ -e "$U/online" ] && cat "$B/capacity" >/dev/null 2>&1 && break; sleep 2; done
+[ -e "$LIM" ] || { log "no charge_control_limit after 120s (patched qcom_battmgr not loaded?); exiting"; exit 1; }
+maxv=$(cat "$MAX" 2>/dev/null || echo 9000000)
+state=released
+release(){ echo "$maxv" > "$LIM" 2>/dev/null && state=released && log "release (max=$maxv) cap=$(cat $B/capacity) usb=$(cat $U/online)"; }
+clamp(){ echo 1000 > "$LIM" 2>/dev/null && state=clamped && log "clamp cap=$(cat $B/capacity) usb=$(cat $U/online)"; }
+trap 'release; exit 0' TERM INT
+echo 80 > "$THR" 2>/dev/null && log "firmware flag set 80, readback=$(cat $THR)"
+cap=$(cat "$B/capacity"); on=$(cat "$U/online")
+if [ "$on" = 1 ] && [ "$cap" -ge 80 ]; then clamp; else release; fi
+n=0
+while sleep 30; do
+  cap=$(cat "$B/capacity" 2>/dev/null) || continue; on=$(cat "$U/online" 2>/dev/null) || continue
+  if [ "$state" = released ] && [ "$on" = 1 ] && [ "$cap" -ge 80 ]; then clamp
+  elif [ "$state" = clamped ] && { [ "$on" != 1 ] || [ "$cap" -le 77 ]; }; then release
+  elif [ "$state" = released ] && [ "$on" = 1 ] && [ "$cap" -le 77 ] && [ "$(cat $B/status)" != Charging ]; then
+    n=$((n+1)); [ $((n % 10)) -eq 0 ] && { log "ERROR not charging below 77% on charger for $((n/2)) min; re-sending max"; echo "$maxv" > "$LIM"; }
+  else n=0; fi
+done

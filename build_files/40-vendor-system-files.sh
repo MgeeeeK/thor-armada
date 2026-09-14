@@ -96,6 +96,7 @@ systemctl enable armada-guestos.service
 systemctl enable armada-device-quirks.service
 systemctl enable armada-rgb.service
 systemctl enable armada-fixups.service
+systemctl enable thor-charge-limit.service
 systemctl enable armada-update-reserve.service
 systemctl enable armada-installer-visibility.service
 systemctl enable armada-steamapps.service
