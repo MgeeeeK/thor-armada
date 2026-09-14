@@ -9,7 +9,10 @@
             "ghcr.io/virtudude/armada": [
                 {
                     "type": "sigstoreSigned",
-                    "keyPaths": ["/etc/pki/containers/armada.pub", "/etc/pki/containers/armada-backup.pub"],
+                    "keyPaths": [
+                        "/etc/pki/containers/armada.pub",
+                        "/etc/pki/containers/armada-backup.pub"
+                    ],
                     "signedIdentity": {
                         "type": "exactRepository",
                         "dockerRepository": "ghcr.io/armada-os/armada"
@@ -19,7 +22,21 @@
             "ghcr.io/armada-os/armada": [
                 {
                     "type": "sigstoreSigned",
-                    "keyPaths": ["/etc/pki/containers/armada.pub", "/etc/pki/containers/armada-backup.pub"],
+                    "keyPaths": [
+                        "/etc/pki/containers/armada.pub",
+                        "/etc/pki/containers/armada-backup.pub"
+                    ],
+                    "signedIdentity": {
+                        "type": "matchRepository"
+                    }
+                }
+            ],
+            "ghcr.io/mgeeeek/thor-armada": [
+                {
+                    "type": "sigstoreSigned",
+                    "keyPaths": [
+                        "/etc/pki/containers/thor-armada.pub"
+                    ],
                     "signedIdentity": {
                         "type": "matchRepository"
                     }

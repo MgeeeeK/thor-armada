@@ -272,7 +272,7 @@ jobs:
           fi
 
           if [ "${{ github.event.repository.fork }}" != "true" ]; then
-            cosign verify --key system_files/etc/pki/containers/armada.pub "${IMAGE_REF}"
+            cosign verify --key system_files/etc/pki/containers/thor-armada.pub "${IMAGE_REF}"
             if [ "${IMAGE_FULL}" = "${ARMADA_LEGACY_IMAGE}" ]; then
               cosign verify --check-claims=false \
                 --key system_files/etc/pki/containers/armada.pub \
